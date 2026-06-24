@@ -1,0 +1,11 @@
+{
+  "name": "zahanshop",
+  "version": "1.0.0",
+  "description": "Zahan Store® — Unified Shop Storefront (Phase 2)",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

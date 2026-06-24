@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://shop.zahan.one">
+<meta property="og:title"       content="Shop — Zahan Store®">
+<meta property="og:description" content="Designed in the desert, made for the world. Shop GenX™, Signature™, Heritage™ & Selene™.">
+<meta property="og:image"       content="https://www.zahan.one/images/og/og-cover.jpg">
+<meta name="description"        content="Shop the full Zahan Store® collection — GenX™, Signature™, Heritage™ and Selene™.">
+<title>Shop — Zahan Store®</title>
+<link rel="icon" href="https://www.zahan.one/images/brand/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="shop-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://www.zahan.one" class="header-logo" aria-label="Zahan Store home">
+        <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®">
+      </a>
+
+      <button class="market-badge" id="marketBadge" title="Switch market" aria-label="Switch market">
+        <i class="fas fa-store" id="marketIcon"></i>
+        <span id="marketLabel">India</span>
+      </button>
+
+      <nav class="header-nav" aria-label="Shop navigation">
+        <a href="https://www.zahan.one/universe.html" class="btn-icon" title="Universe" aria-label="Zahan Universe">
+          <i class="fas fa-globe-asia"></i>
+        </a>
+        <!-- Cart: wired in Phase 3 -->
+        <button class="btn-icon" id="cartBtn" title="Cart" aria-label="Cart" style="position:relative;">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" aria-live="polite">0</span>
+        </button>
+        <a href="https://www.zahan.one/index.html#contact" class="btn-icon" title="Help" aria-label="Help">
+          <i class="fas fa-headset"></i>
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- ── SHOP HERO + FILTERS ── -->
+<section class="shop-hero">
+  <div class="container">
+    <div class="shop-hero-inner">
+      <div>
+        <h1 id="heroTitle">Shop Zahan Store®</h1>
+        <p id="heroSub">Loading collection…</p>
+      </div>
+      <div id="resultMeta" style="font-size:0.82rem;color:var(--text-muted);"></div>
+    </div>
+    <div class="brand-tabs" role="tablist" aria-label="Filter by collection" id="brandTabs">
+      <button class="brand-tab active" data-brand="all"       role="tab" aria-selected="true">
+        <span class="dot"></span>All Collections
+      </button>
+      <button class="brand-tab" data-brand="GenX"      role="tab" aria-selected="false">
+        <span class="dot"></span>GenX™
+      </button>
+      <button class="brand-tab" data-brand="Signature" role="tab" aria-selected="false">
+        <span class="dot"></span>Signature™
+      </button>
+      <button class="brand-tab" data-brand="Heritage"  role="tab" aria-selected="false">
+        <span class="dot"></span>Heritage™
+      </button>
+      <button class="brand-tab" data-brand="Selene"    role="tab" aria-selected="false">
+        <span class="dot"></span>Selene™
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRODUCT LISTING ── -->
+<main class="shop-body">
+  <div class="container">
+    <div class="grid-controls">
+      <p class="product-count" id="productCount">&nbsp;</p>
+    </div>
+    <div class="product-grid" id="productGrid" role="list">
+      <!-- Skeleton loaders shown on init -->
+    </div>
+  </div>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="shop-footer">
+  <div class="container">
+    <div class="footer-top">
+      <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®" style="height:26px;opacity:0.6;">
+      <nav class="footer-links" aria-label="Footer links">
+        <a href="https://www.zahan.one">Home</a>
+        <a href="https://www.zahan.one/universe.html">Universe</a>
+        <a href="https://www.zahan.one/legal.html#faqs">FAQ</a>
+        <a href="https://www.zahan.one/legal.html#refund">Returns</a>
+        <a href="https://www.zahan.one/legal.html#shipping">Shipping</a>
+        <a href="https://www.zahan.one/index.html#contact">Contact</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ZahanStore®. All Rights Reserved.</span>
+      <span>Made with ♥ in Abu Dhabi, UAE 🌙</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ── TOAST CONTAINER ── -->
+<div class="toast-container" aria-live="polite"></div>
+
+<script src="app.js"></script>
+<script>
+/* ── PAGE INIT ── */
+let state = {
+  market: 'in',
+  brand:  'all',
+  products: [],
+  loading: false,
+};
+
+/* Parse URL params */
+(function parseURL() {
+  const p = new URLSearchParams(window.location.search);
+  state.market = p.get('market') || 'in';
+  state.brand  = p.get('brand')  || 'all';
+})();
+
+/* ── MARKET BADGE ── */
+function renderMarketBadge() {
+  const badge = document.getElementById('marketBadge');
+  const icon  = document.getElementById('marketIcon');
+  const label = document.getElementById('marketLabel');
+  if (state.market === 'in') {
+    badge.className = 'market-badge market-badge--india';
+    icon.className  = 'fas fa-store';
+    label.textContent = 'India';
+  } else {
+    badge.className = 'market-badge market-badge--global';
+    icon.className  = 'fas fa-globe';
+    label.textContent = 'International';
+  }
+}
+
+document.getElementById('marketBadge').addEventListener('click', () => {
+  state.market = getOppositeMarket(state.market);
+  updateURL();
+  renderMarketBadge();
+  renderHero();
+  loadProducts();
+});
+
+/* ── HERO TEXT ── */
+function renderHero() {
+  const title = document.getElementById('heroTitle');
+  const sub   = document.getElementById('heroSub');
+  const market = state.market;
+  const brand  = state.brand;
+  if (brand === 'all') {
+    title.textContent = 'Shop Zahan Store®';
+    sub.textContent   = market === 'in'
+      ? 'All collections · India · Pay in ₹'
+      : 'All collections · International · Pay in $';
+  } else {
+    title.textContent = `Zahan® ${getBrandLabel(brand)}`;
+    sub.textContent   = market === 'in'
+      ? `${brand}™ collection · India · Pay in ₹`
+      : `${brand}™ collection · International · Pay in $`;
+  }
+}
+
+/* ── BRAND TABS ── */
+document.getElementById('brandTabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.brand-tab');
+  if (!tab) return;
+  document.querySelectorAll('.brand-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  tab.classList.add('active');
+  tab.setAttribute('aria-selected', 'true');
+  state.brand = tab.dataset.brand;
+  updateURL();
+  renderHero();
+  loadProducts();
+});
+
+/* ── URL SYNC ── */
+function updateURL() {
+  const url = new URL(window.location);
+  url.searchParams.set('market', state.market);
+  if (state.brand !== 'all') url.searchParams.set('brand', state.brand);
+  else url.searchParams.delete('brand');
+  window.history.replaceState({}, '', url);
+}
+
+/* ── SKELETONS ── */
+function renderSkeletons(n = 6) {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = Array.from({ length: n }, () => `
+    <div class="skeleton-card" role="listitem" aria-label="Loading product">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-info">
+        <div class="skeleton-line skeleton-line--title"></div>
+        <div class="skeleton-line skeleton-line--price"></div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('productCount').innerHTML = '&nbsp;';
+}
+
+/* ── PRODUCT CARD ── */
+function renderCard(product) {
+  const img    = getPrimaryImage(product.product_images);
+  const price  = getMinPrice(product.product_variants, state.market);
+  const stock  = getStockStatus(product.product_variants);
+  const brand  = product.brand.toLowerCase();
+  const priceStr = price ? formatPrice(price, state.market) : null;
+
+  return `
+    <a href="product.html?id=${product.id}&market=${state.market}"
+       class="product-card"
+       role="listitem"
+       aria-label="${product.name}, ${product.brand}™">
+      <div class="product-img-wrap">
+        ${img
+          ? `<img src="${img.url}" alt="${img.alt_text || product.name}" loading="lazy">`
+          : `<div class="product-img-placeholder"><i class="fas fa-tshirt"></i></div>`
+        }
+        <span class="brand-badge brand-badge--${brand}">${product.brand}™</span>
+        ${stock === 'out' ? `<div class="out-of-stock-overlay">Sold Out</div>` : ''}
+      </div>
+      <div class="product-info">
+        <p class="product-brand-label">${product.brand}™</p>
+        <h3 class="product-name">${product.name}</h3>
+        <p class="product-price">
+          ${priceStr
+            ? `${priceStr} <span class="currency">${getCurrencyLabel(state.market)}</span>`
+            : `<span class="coming-soon">Coming soon</span>`
+          }
+        </p>
+      </div>
+    </a>
+  `;
+}
+
+/* ── EMPTY STATE ── */
+function renderEmpty() {
+  const brand = state.brand === 'all' ? '' : `the ${state.brand}™ collection`;
+  return `
+    <div class="state-box">
+      <div class="state-icon"><i class="fas fa-tshirt"></i></div>
+      <h3>No products yet</h3>
+      <p>
+        ${brand ? `${brand} hasn't launched yet.` : 'Products are being added.'}
+        Check back soon — new drops coming. 🌙
+      </p>
+      ${state.brand !== 'all'
+        ? `<button class="btn btn-outline" onclick="switchToAll()">View all collections</button>`
+        : ''}
+    </div>
+  `;
+}
+
+function switchToAll() {
+  state.brand = 'all';
+  document.querySelectorAll('.brand-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.brand === 'all');
+    t.setAttribute('aria-selected', t.dataset.brand === 'all' ? 'true' : 'false');
+  });
+  updateURL();
+  renderHero();
+  loadProducts();
+}
+
+/* ── ERROR STATE ── */
+function renderError(msg) {
+  return `
+    <div class="state-box">
+      <div class="state-icon"><i class="fas fa-exclamation-circle"></i></div>
+      <h3>Something went wrong</h3>
+      <p>${msg || 'Could not load products. Please refresh and try again.'}</p>
+      <button class="btn btn-outline" onclick="loadProducts()">
+        <i class="fas fa-redo"></i> Retry
+      </button>
+    </div>
+  `;
+}
+
+/* ── LOAD PRODUCTS ── */
+async function loadProducts() {
+  if (state.loading) return;
+  state.loading = true;
+  renderSkeletons();
+
+  try {
+    state.products = await fetchProducts(state.market, state.brand);
+    const grid = document.getElementById('productGrid');
+    const count = document.getElementById('productCount');
+    const meta  = document.getElementById('resultMeta');
+
+    if (!state.products.length) {
+      grid.innerHTML = renderEmpty();
+      count.innerHTML = '';
+      meta.textContent = '';
+    } else {
+      grid.innerHTML = state.products.map(renderCard).join('');
+      const n = state.products.length;
+      count.innerHTML = `<strong>${n}</strong> product${n !== 1 ? 's' : ''} found`;
+      meta.textContent = `Showing ${state.market === 'in' ? 'India' : 'International'} collection`;
+    }
+  } catch (err) {
+    console.error('Load error:', err);
+    document.getElementById('productGrid').innerHTML = renderError();
+    document.getElementById('productCount').innerHTML = '';
+  } finally {
+    state.loading = false;
+  }
+}
+
+/* ── RESTORE TAB FROM URL ── */
+(function restoreTab() {
+  const tabs = document.querySelectorAll('.brand-tab');
+  tabs.forEach(t => {
+    const match = t.dataset.brand === state.brand;
+    t.classList.toggle('active', match);
+    t.setAttribute('aria-selected', match ? 'true' : 'false');
+  });
+})();
+
+/* ── CART BUTTON (Phase 3 placeholder) ── */
+document.getElementById('cartBtn').addEventListener('click', () => {
+  showToast('Cart checkout launches in Phase 3 🚀', 'fa-info-circle');
+});
+
+/* ── BOOT ── */
+renderMarketBadge();
+renderHero();
+loadProducts();
+</script>
+</body>
+</html>

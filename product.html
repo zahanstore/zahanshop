@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Product detail — Zahan Store®">
+<title>Product — Zahan Store®</title>
+<link rel="icon" href="https://www.zahan.one/images/brand/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="shop-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://www.zahan.one" class="header-logo" aria-label="Zahan Store home">
+        <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®">
+      </a>
+      <button class="market-badge" id="marketBadge" aria-label="Current market">
+        <i class="fas fa-store" id="marketIcon"></i>
+        <span id="marketLabel">India</span>
+      </button>
+      <nav class="header-nav">
+        <a href="index.html" id="backToShopLink" class="btn-icon" title="Back to shop" aria-label="Back to shop">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <button class="btn-icon" id="cartBtn" title="Cart" style="position:relative;">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count">0</span>
+        </button>
+        <a href="https://www.zahan.one/index.html#contact" class="btn-icon" title="Help">
+          <i class="fas fa-headset"></i>
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- ── PRODUCT DETAIL ── -->
+<main class="product-detail">
+  <div class="container">
+    <a href="index.html" class="back-link" id="backLink">
+      <i class="fas fa-arrow-left"></i>
+      <span>Back to shop</span>
+    </a>
+    <div id="productContent">
+      <!-- Skeleton shown on load, replaced by product data -->
+    </div>
+  </div>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="shop-footer">
+  <div class="container">
+    <div class="footer-top">
+      <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®" style="height:26px;opacity:0.6;">
+      <nav class="footer-links">
+        <a href="https://www.zahan.one">Home</a>
+        <a href="https://www.zahan.one/universe.html">Universe</a>
+        <a href="https://www.zahan.one/legal.html#faqs">FAQ</a>
+        <a href="https://www.zahan.one/legal.html#refund">Returns</a>
+        <a href="https://www.zahan.one/legal.html#shipping">Shipping</a>
+        <a href="https://www.zahan.one/index.html#contact">Contact</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ZahanStore®. All Rights Reserved.</span>
+      <span>Made with ♥ in Abu Dhabi, UAE 🌙</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="app.js"></script>
+<script>
+/* ── STATE ── */
+let state = {
+  market:  'in',
+  product: null,
+  selectedVariant: null,
+  selectedSize:    null,
+  selectedColor:   null,
+  mainImageUrl:    null,
+};
+
+/* ── PARSE URL ── */
+(function init() {
+  const p = new URLSearchParams(window.location.search);
+  state.market = p.get('market') || 'in';
+  const id = p.get('id');
+
+  // Update back link to preserve market filter
+  const backLink = document.getElementById('backLink');
+  const backShop = document.getElementById('backToShopLink');
+  if (backLink) backLink.href = `index.html?market=${state.market}`;
+  if (backShop) backShop.href = `index.html?market=${state.market}`;
+
+  renderMarketBadge();
+
+  if (!id) { renderError('No product specified.'); return; }
+  renderSkeleton();
+  loadProduct(id);
+})();
+
+/* ── MARKET BADGE (read-only on detail page) ── */
+function renderMarketBadge() {
+  const badge = document.getElementById('marketBadge');
+  const icon  = document.getElementById('marketIcon');
+  const label = document.getElementById('marketLabel');
+  if (state.market === 'in') {
+    badge.className = 'market-badge market-badge--india';
+    icon.className  = 'fas fa-store';
+    label.textContent = 'India';
+  } else {
+    badge.className = 'market-badge market-badge--global';
+    icon.className  = 'fas fa-globe';
+    label.textContent = 'International';
+  }
+}
+
+/* ── SKELETON ── */
+function renderSkeleton() {
+  document.getElementById('productContent').innerHTML = `
+    <div class="detail-grid">
+      <div>
+        <div class="gallery-main skeleton-img" style="border-radius:var(--radius-xl);aspect-ratio:1;"></div>
+        <div class="gallery-thumbs" style="margin-top:0.875rem;">
+          ${Array.from({length:4},()=>`<div class="skeleton-img" style="width:68px;height:68px;border-radius:var(--radius);"></div>`).join('')}
+        </div>
+      </div>
+      <div style="padding-top:0.5rem;">
+        <div class="skeleton-line" style="width:35%;margin-bottom:1rem;"></div>
+        <div class="skeleton-line skeleton-line--title" style="height:2rem;margin-bottom:0.75rem;"></div>
+        <div class="skeleton-line" style="width:60%;height:2rem;margin-bottom:2rem;"></div>
+        <div class="skeleton-line" style="width:90%;margin-bottom:0.5rem;"></div>
+        <div class="skeleton-line" style="width:80%;margin-bottom:0.5rem;"></div>
+        <div class="skeleton-line" style="width:70%;"></div>
+      </div>
+    </div>
+  `;
+}
+
+/* ── LOAD PRODUCT ── */
+async function loadProduct(id) {
+  try {
+    state.product = await fetchProduct(id);
+    if (!state.product) { renderError('Product not found or no longer available.'); return; }
+    document.title = `${state.product.name} — Zahan Store®`;
+    renderProduct();
+  } catch (err) {
+    console.error('Product load error:', err);
+    renderError('Could not load product details.');
+  }
+}
+
+/* ── RENDER PRODUCT ── */
+function renderProduct() {
+  const p = state.product;
+  const images   = getSortedImages(p.product_images);
+  const variants = p.product_variants || [];
+  const sizes    = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors   = [...new Set(variants.map(v => v.color).filter(Boolean))];
+  const brand    = p.brand.toLowerCase();
+
+  // Set first image + default variant
+  state.mainImageUrl   = images.length ? images[0].url : null;
+  state.selectedVariant = variants.find(v => (v.stock_qty || 0) > 0) || variants[0] || null;
+  if (state.selectedVariant) {
+    state.selectedSize  = state.selectedVariant.size;
+    state.selectedColor = state.selectedVariant.color;
+  }
+
+  const currentPrice = state.selectedVariant
+    ? formatPrice(getVariantPrice(state.selectedVariant, state.market), state.market)
+    : null;
+
+  document.getElementById('productContent').innerHTML = `
+    <!-- Gallery -->
+    <div class="detail-grid">
+      <div class="detail-gallery">
+        <div class="gallery-main" id="galleryMain">
+          ${state.mainImageUrl
+            ? `<img id="mainImg" src="${state.mainImageUrl}" alt="${p.name}">`
+            : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:3rem;"><i class="fas fa-tshirt"></i></div>`
+          }
+        </div>
+        ${images.length > 1 ? `
+          <div class="gallery-thumbs" role="list" aria-label="Product images">
+            ${images.map((img, i) => `
+              <button class="gallery-thumb ${i === 0 ? 'active' : ''}"
+                      data-src="${img.url}"
+                      data-idx="${i}"
+                      role="listitem"
+                      aria-label="View image ${i + 1}"
+                      title="${img.alt_text || 'Product image ' + (i + 1)}">
+                <img src="${img.url}" alt="${img.alt_text || ''}">
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Info Panel -->
+      <div class="detail-info">
+        <p class="detail-eyebrow ${brand}">${p.brand}™</p>
+        <h1 class="detail-title">${p.name}</h1>
+
+        <p class="detail-price" id="priceDisplay">
+          ${currentPrice || '<span style="font-size:1rem;color:var(--text-muted);">Price coming soon</span>'}
+          ${currentPrice ? `<span class="currency-label">${getCurrencyLabel(state.market)}</span>` : ''}
+        </p>
+
+        ${p.description ? `<p class="detail-description">${p.description}</p>` : ''}
+
+        <!-- Size Selector -->
+        ${sizes.length ? `
+          <div class="variant-group">
+            <p class="variant-label">Size <span id="selectedSizeLabel">${state.selectedSize || ''}</span></p>
+            <div class="variant-options" id="sizeOptions">
+              ${sizes.map(size => {
+                const hasStock = variants.some(v => v.size === size && (v.stock_qty || 0) > 0);
+                const isActive = size === state.selectedSize;
+                return `<button
+                  class="variant-btn ${isActive ? 'active' : ''} ${!hasStock ? 'out-of-stock' : ''}"
+                  data-size="${size}"
+                  ${!hasStock ? 'disabled aria-disabled="true"' : ''}
+                  aria-pressed="${isActive}"
+                  aria-label="Size ${size}${!hasStock ? ', sold out' : ''}"
+                >${size}</button>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Colour Selector -->
+        ${colors.length ? `
+          <div class="variant-group">
+            <p class="variant-label">Colour <span id="selectedColourLabel">${state.selectedColor || ''}</span></p>
+            <div class="variant-options" id="colourOptions">
+              ${colors.map(color => {
+                const hasStock = variants.some(v => v.color === color && (v.stock_qty || 0) > 0);
+                const isActive = color === state.selectedColor;
+                return `<button
+                  class="variant-btn ${isActive ? 'active' : ''} ${!hasStock ? 'out-of-stock' : ''}"
+                  data-color="${color}"
+                  ${!hasStock ? 'disabled aria-disabled="true"' : ''}
+                  aria-pressed="${isActive}"
+                  aria-label="Colour ${color}${!hasStock ? ', sold out' : ''}"
+                >${color}</button>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Stock Indicator -->
+        <div id="stockIndicator" class="stock-indicator">
+          ${renderStockBadge()}
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-group">
+          <button class="btn btn-primary btn-lg btn-full" id="addToCartBtn" onclick="handleAddToCart()">
+            <i class="fas fa-shopping-bag"></i>
+            Add to Cart
+          </button>
+          <div class="phase3-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>Checkout with Razorpay (India) and Stripe (International) launches in <strong>Phase 3</strong>. Cart is live — payment wiring coming next week.</span>
+          </div>
+        </div>
+
+        <!-- Meta -->
+        ${renderMeta(p)}
+      </div>
+    </div>
+  `;
+
+  bindGallery();
+  bindVariants();
+  updateAddToCartState();
+}
+
+/* ── STOCK BADGE ── */
+function renderStockBadge() {
+  if (!state.selectedVariant) return '';
+  const qty = state.selectedVariant.stock_qty || 0;
+  if (qty === 0)  return `<span class="no-stock"><span class="stock-dot"></span>Out of stock</span>`;
+  if (qty <= 3)   return `<span class="low-stock"><span class="stock-dot"></span>Only ${qty} left</span>`;
+  if (qty <= 10)  return `<span class="low-stock"><span class="stock-dot"></span>Low stock</span>`;
+  return `<span class="in-stock"><span class="stock-dot"></span>In stock</span>`;
+}
+
+/* ── PRODUCT META ── */
+function renderMeta(p) {
+  const rows = [];
+  if (p.category) rows.push({ key: 'Category', val: p.category });
+  if (p.brand)    rows.push({ key: 'Collection', val: `${p.brand}™` });
+  if (state.selectedVariant?.material) rows.push({ key: 'Material', val: state.selectedVariant.material });
+  if (state.selectedVariant?.sku)      rows.push({ key: 'SKU', val: state.selectedVariant.sku });
+  if (p.tags?.length) rows.push({ key: 'Tags', val: null, tags: p.tags });
+  if (!rows.length) return '';
+  return `
+    <div class="product-meta">
+      ${rows.map(r => `
+        <div class="meta-row">
+          <span class="meta-key">${r.key}</span>
+          ${r.tags
+            ? `<span class="meta-val"><span class="tags-list">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</span></span>`
+            : `<span class="meta-val">${r.val}</span>`
+          }
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/* ── GALLERY INTERACTION ── */
+function bindGallery() {
+  document.querySelectorAll('.gallery-thumb').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.gallery-thumb').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mainImg = document.getElementById('mainImg');
+      if (mainImg) {
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+          mainImg.src = btn.dataset.src;
+          mainImg.style.opacity = '1';
+          mainImg.style.transition = 'opacity 0.25s';
+        }, 120);
+      }
+    });
+  });
+}
+
+/* ── VARIANT INTERACTION ── */
+function bindVariants() {
+  const variants = state.product.product_variants || [];
+
+  // Size buttons
+  document.querySelectorAll('#sizeOptions .variant-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#sizeOptions .variant-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      state.selectedSize = btn.dataset.size;
+      const label = document.getElementById('selectedSizeLabel');
+      if (label) label.textContent = state.selectedSize;
+      resolveVariant();
+    });
+  });
+
+  // Colour buttons
+  document.querySelectorAll('#colourOptions .variant-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#colourOptions .variant-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      state.selectedColor = btn.dataset.color;
+      const label = document.getElementById('selectedColourLabel');
+      if (label) label.textContent = state.selectedColor;
+      resolveVariant();
+    });
+  });
+}
+
+/* Match size + color selection to a specific variant */
+function resolveVariant() {
+  const variants = state.product.product_variants || [];
+  const match = variants.find(v =>
+    (!state.selectedSize  || v.size  === state.selectedSize) &&
+    (!state.selectedColor || v.color === state.selectedColor)
+  ) || variants.find(v =>
+    !state.selectedSize  || v.size  === state.selectedSize
+  ) || null;
+
+  state.selectedVariant = match;
+
+  // Update price
+  const priceEl = document.getElementById('priceDisplay');
+  if (priceEl) {
+    const price = match ? formatPrice(getVariantPrice(match, state.market), state.market) : null;
+    priceEl.innerHTML = price
+      ? `${price} <span class="currency-label">${getCurrencyLabel(state.market)}</span>`
+      : `<span style="font-size:1rem;color:var(--text-muted);">Price coming soon</span>`;
+  }
+
+  // Update stock
+  const stockEl = document.getElementById('stockIndicator');
+  if (stockEl) stockEl.innerHTML = renderStockBadge();
+
+  updateAddToCartState();
+}
+
+/* ── ADD TO CART ── */
+function updateAddToCartState() {
+  const btn = document.getElementById('addToCartBtn');
+  if (!btn) return;
+  const outOfStock = state.selectedVariant && (state.selectedVariant.stock_qty || 0) === 0;
+  const noVariant  = !state.selectedVariant;
+  btn.disabled = outOfStock || noVariant;
+  btn.innerHTML = outOfStock
+    ? '<i class="fas fa-times-circle"></i> Out of Stock'
+    : '<i class="fas fa-shopping-bag"></i> Add to Cart';
+}
+
+function handleAddToCart() {
+  if (!state.product || !state.selectedVariant) return;
+  Cart.add(state.product, state.selectedVariant, state.market);
+}
+
+/* ── ERROR STATE ── */
+function renderError(msg) {
+  document.getElementById('productContent').innerHTML = `
+    <div class="state-box" style="padding:5rem 0;">
+      <div class="state-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <h3>Product unavailable</h3>
+      <p>${msg}</p>
+      <a href="index.html?market=${state.market}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Back to Shop
+      </a>
+    </div>
+  `;
+}
+
+/* ── CART BUTTON ── */
+document.getElementById('cartBtn').addEventListener('click', () => {
+  showToast('Cart checkout launches in Phase 3 🚀', 'fa-info-circle');
+});
+</script>
+</body>
+</html>
