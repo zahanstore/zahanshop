@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Zahan Store®</title>
+<link rel="icon" href="https://www.zahan.one/images/brand/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+.checkout-wrap  { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+.checkout-grid  { display: grid; grid-template-columns: 1fr 1.4fr; gap: 3rem; align-items: start; }
+@media(max-width:720px){ .checkout-grid{ grid-template-columns:1fr; } }
+
+/* Order summary */
+.order-summary-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  position: sticky;
+  top: 80px;
+}
+.summary-title {
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 1.25rem;
+}
+.summary-product {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.summary-img {
+  width: 72px; height: 72px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #0d1020;
+  flex-shrink: 0;
+}
+.summary-img img { width: 100%; height: 100%; object-fit: cover; }
+.summary-img-placeholder { width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--border-hi);font-size:1.4rem; }
+.summary-details {}
+.summary-brand  { font-family:var(--font-head);font-size:0.62rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.2rem; }
+.summary-name   { font-family:var(--font-head);font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.3rem;line-height:1.3; }
+.summary-variant{ font-size:0.78rem;color:var(--text-muted); }
+.summary-divider{ border:none;border-top:1px solid var(--border);margin:1rem 0; }
+.summary-row    { display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;margin-bottom:0.6rem; }
+.summary-row .label{ color:var(--text-muted); }
+.summary-row .value{ font-family:var(--font-head);font-weight:600;color:var(--text); }
+.summary-total  { font-family:var(--font-head);font-size:1.15rem;font-weight:700;color:var(--text); }
+
+/* Checkout form */
+.checkout-form-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2rem 1.75rem;
+}
+.form-section-title {
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 1.5rem 0 0.875rem;
+}
+.form-section-title:first-child { margin-top: 0; }
+.form-row { display: grid; gap: 0.75rem; margin-bottom: 0.75rem; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+@media(max-width:480px){ .form-row.cols-2{ grid-template-columns:1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field label {
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.field input, .field select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+.field input::placeholder { color: var(--text-dim); }
+.field input:focus, .field select:focus { border-color: var(--accent); }
+.field input.error, .field select.error { border-color: #f87171; }
+.field .err-msg { font-size: 0.72rem; color: #f87171; display: none; }
+.field.has-error .err-msg { display: block; }
+.field.has-error input,
+.field.has-error select { border-color: #f87171; }
+
+.field select option { background: #1a2038; color: var(--text); }
+
+.pay-btn-wrap { margin-top: 1.5rem; }
+#payBtn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s;
+}
+#payBtn.india   { background: linear-gradient(135deg, #ff9933, #e07b20); color: #fff; box-shadow: 0 8px 24px rgba(255,153,51,0.35); }
+#payBtn.global  { background: linear-gradient(135deg, #5b8dee, #a78bfa); color: #fff; box-shadow: 0 8px 24px rgba(91,141,238,0.35); }
+#payBtn:hover   { transform: translateY(-2px); filter: brightness(1.08); }
+#payBtn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
+.secure-note    { text-align:center;font-size:0.72rem;color:var(--text-dim);margin-top:0.75rem;display:flex;align-items:center;justify-content:center;gap:6px; }
+</style>
+</head>
+<body>
+
+<header class="shop-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://www.zahan.one" class="header-logo">
+        <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®">
+      </a>
+      <button class="market-badge" id="marketBadge" style="cursor:default;">
+        <i class="fas fa-lock" style="font-size:0.7rem;"></i>
+        <span>Secure Checkout</span>
+      </button>
+      <nav class="header-nav">
+        <a href="javascript:history.back()" class="btn-icon" title="Back">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="checkout-wrap">
+    <div class="checkout-grid">
+
+      <!-- ── ORDER SUMMARY ── -->
+      <div class="order-summary-box" id="orderSummaryBox">
+        <p class="summary-title">Order Summary</p>
+        <div id="summaryContent">
+          <div class="skeleton-img" style="height:80px;border-radius:var(--radius);margin-bottom:1rem;"></div>
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line" style="width:55%;margin-top:0.5rem;"></div>
+        </div>
+      </div>
+
+      <!-- ── CHECKOUT FORM ── -->
+      <div class="checkout-form-box">
+        <div id="formContent">
+          <div class="skeleton-line skeleton-line--title" style="height:1.5rem;margin-bottom:1rem;"></div>
+          <div class="skeleton-line" style="margin-bottom:0.75rem;"></div>
+          <div class="skeleton-line" style="width:70%;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="app.js"></script>
+<script>
+/* ── STATE ── */
+const params    = new URLSearchParams(window.location.search);
+const variantId = params.get('variantId');
+const productId = params.get('productId');
+const qty       = parseInt(params.get('qty') || '1', 10);
+const market    = params.get('market') || 'in';
+
+if (!variantId) { window.location.href = 'index.html'; }
+
+/* Market badge */
+const badge = document.getElementById('marketBadge');
+if (market === 'in') {
+  badge.className = 'market-badge market-badge--india';
+  badge.innerHTML = '<i class="fas fa-lock" style="font-size:0.7rem;"></i> Secure Checkout · India';
+} else {
+  badge.className = 'market-badge market-badge--global';
+  badge.innerHTML = '<i class="fas fa-lock" style="font-size:0.7rem;"></i> Secure Checkout · International';
+}
+
+/* ── LOAD PRODUCT FOR SUMMARY ── */
+async function loadSummary() {
+  const product = await fetchProduct(productId || variantId);
+  if (!product) { document.getElementById('summaryContent').innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Could not load product.</p>'; return; }
+
+  const variant = product.product_variants?.find(v => v.id === variantId)
+                || product.product_variants?.[0];
+  const img     = getPrimaryImage(product.product_images);
+  const price   = variant ? formatPrice(getVariantPrice(variant, market), market) : null;
+  const label   = [variant?.size, variant?.color].filter(Boolean).join(' / ');
+  const brand   = product.brand.toLowerCase();
+
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="summary-product">
+      <div class="summary-img">
+        ${img
+          ? `<img src="${img.url}" alt="${product.name}">`
+          : `<div class="summary-img-placeholder"><i class="fas fa-tshirt"></i></div>`}
+      </div>
+      <div class="summary-details">
+        <p class="summary-brand">${product.brand}™</p>
+        <p class="summary-name">${product.name}</p>
+        ${label ? `<p class="summary-variant">${label}</p>` : ''}
+      </div>
+    </div>
+    <hr class="summary-divider">
+    <div class="summary-row"><span class="label">Qty</span><span class="value">${qty}</span></div>
+    <div class="summary-row"><span class="label">Price</span><span class="value">${price || '—'}</span></div>
+    <div class="summary-row"><span class="label">Shipping</span><span class="value" style="color:#34d399;">Calculated at payment</span></div>
+    <hr class="summary-divider">
+    <div class="summary-row"><span class="label">Total</span><span class="value summary-total">${price || '—'}</span></div>
+  `;
+}
+
+/* ── RENDER FORM ── */
+function renderForm() {
+  const formEl = document.getElementById('formContent');
+
+  if (market === 'in') {
+    /* India: full shipping address + Razorpay */
+    formEl.innerHTML = `
+      <p class="form-section-title">Contact Details</p>
+      <div class="form-row">
+        <div class="field" id="f-name">
+          <label>Full Name</label>
+          <input type="text" id="inp-name" placeholder="Rahul Sharma" autocomplete="name">
+          <span class="err-msg">Please enter your name</span>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="field" id="f-email">
+          <label>Email</label>
+          <input type="email" id="inp-email" placeholder="rahul@email.com" autocomplete="email">
+          <span class="err-msg">Valid email required</span>
+        </div>
+        <div class="field" id="f-phone">
+          <label>Phone</label>
+          <input type="tel" id="inp-phone" placeholder="+91 98765 43210" autocomplete="tel">
+          <span class="err-msg">Phone number required</span>
+        </div>
+      </div>
+
+      <p class="form-section-title">Shipping Address</p>
+      <div class="form-row">
+        <div class="field" id="f-line1">
+          <label>Address Line 1</label>
+          <input type="text" id="inp-line1" placeholder="Flat 4B, Sunshine Apts" autocomplete="address-line1">
+          <span class="err-msg">Address required</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Address Line 2 <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>
+          <input type="text" id="inp-line2" placeholder="Near Koramangala Signal" autocomplete="address-line2">
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="field" id="f-city">
+          <label>City</label>
+          <input type="text" id="inp-city" placeholder="Bengaluru" autocomplete="address-level2">
+          <span class="err-msg">City required</span>
+        </div>
+        <div class="field" id="f-state">
+          <label>State</label>
+          <input type="text" id="inp-state" placeholder="Karnataka" autocomplete="address-level1">
+          <span class="err-msg">State required</span>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="field" id="f-postal">
+          <label>PIN Code</label>
+          <input type="text" id="inp-postal" placeholder="560034" maxlength="6" autocomplete="postal-code">
+          <span class="err-msg">PIN code required</span>
+        </div>
+        <div class="field">
+          <label>Country</label>
+          <input type="text" value="India" readonly style="opacity:0.6;cursor:default;">
+        </div>
+      </div>
+
+      <div class="pay-btn-wrap">
+        <button id="payBtn" class="india" onclick="handleRazorpay()">
+          <i class="fas fa-bolt"></i> Pay with Razorpay
+        </button>
+        <p class="secure-note"><i class="fas fa-lock"></i> Secured by Razorpay · 256-bit encryption</p>
+      </div>
+    `;
+  } else {
+    /* International: email only — Stripe Checkout handles the rest */
+    formEl.innerHTML = `
+      <p style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.35rem;">Complete your order</p>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.75rem;line-height:1.7;">
+        You'll be redirected to Stripe's secure checkout page to enter your card and shipping address.
+      </p>
+      <p class="form-section-title">Your Email</p>
+      <div class="form-row">
+        <div class="field" id="f-email">
+          <label>Email Address</label>
+          <input type="email" id="inp-email" placeholder="your@email.com" autocomplete="email">
+          <span class="err-msg">Valid email required</span>
+        </div>
+      </div>
+      <div class="pay-btn-wrap">
+        <button id="payBtn" class="global" onclick="handleStripe()">
+          <i class="fab fa-stripe"></i> Checkout with Card
+        </button>
+        <p class="secure-note"><i class="fas fa-lock"></i> Secured by Stripe · Visa, Mastercard, Amex</p>
+      </div>
+    `;
+  }
+}
+
+/* ── VALIDATION ── */
+function validateField(id, inputId, test) {
+  const field = document.getElementById(id);
+  const val   = document.getElementById(inputId)?.value?.trim() || '';
+  const ok    = test(val);
+  field?.classList.toggle('has-error', !ok);
+  return ok;
+}
+function clearErrors() {
+  document.querySelectorAll('.field.has-error').forEach(f => f.classList.remove('has-error'));
+}
+
+/* ── RAZORPAY FLOW (India) ── */
+async function handleRazorpay() {
+  clearErrors();
+  const name   = document.getElementById('inp-name')?.value.trim()   || '';
+  const email  = document.getElementById('inp-email')?.value.trim()  || '';
+  const phone  = document.getElementById('inp-phone')?.value.trim()  || '';
+  const line1  = document.getElementById('inp-line1')?.value.trim()  || '';
+  const line2  = document.getElementById('inp-line2')?.value.trim()  || '';
+  const city   = document.getElementById('inp-city')?.value.trim()   || '';
+  const state  = document.getElementById('inp-state')?.value.trim()  || '';
+  const postal = document.getElementById('inp-postal')?.value.trim() || '';
+
+  let valid = true;
+  if (!name)                        { document.getElementById('f-name')?.classList.add('has-error');   valid = false; }
+  if (!email || !email.includes('@')){ document.getElementById('f-email')?.classList.add('has-error'); valid = false; }
+  if (!phone)                       { document.getElementById('f-phone')?.classList.add('has-error');  valid = false; }
+  if (!line1)                       { document.getElementById('f-line1')?.classList.add('has-error');  valid = false; }
+  if (!city)                        { document.getElementById('f-city')?.classList.add('has-error');   valid = false; }
+  if (!state)                       { document.getElementById('f-state')?.classList.add('has-error');  valid = false; }
+  if (!postal || postal.length < 6) { document.getElementById('f-postal')?.classList.add('has-error'); valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating order…';
+
+  try {
+    const res  = await fetch('/api/create-order', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variantId,
+        quantity: qty,
+        email,
+        phone,
+        shipping: { name, line1, line2, city, state, postal, country: 'IN' },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Order creation failed');
+
+    /* Load Razorpay SDK */
+    await new Promise((resolve, reject) => {
+      if (window.Razorpay) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+
+    const rzp = new window.Razorpay({
+      key:         data.keyId,
+      amount:      data.amount,
+      currency:    'INR',
+      order_id:    data.razorpayOrderId,
+      name:        'Zahan Store®',
+      description: data.productName,
+      image:       'https://www.zahan.one/images/brand/logo.png',
+      prefill:     { name, email, contact: phone },
+      theme:       { color: '#5b8dee' },
+      handler: function(response) {
+        window.location.href = `/success?orderId=${data.orderId}&market=in`;
+      },
+      modal: {
+        ondismiss: function() {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-bolt"></i> Pay with Razorpay';
+          showToast('Payment cancelled — your cart is still saved', 'fa-info-circle');
+        },
+      },
+    });
+    rzp.open();
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Something went wrong. Please try again.', 'fa-exclamation-circle');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-bolt"></i> Pay with Razorpay';
+  }
+}
+
+/* ── STRIPE FLOW (International) ── */
+async function handleStripe() {
+  clearErrors();
+  const email = document.getElementById('inp-email')?.value.trim() || '';
+  if (!email || !email.includes('@')) {
+    document.getElementById('f-email')?.classList.add('has-error');
+    return;
+  }
+
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Stripe…';
+
+  try {
+    const res  = await fetch('/api/create-stripe-session', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variantId, quantity: qty, email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Checkout creation failed');
+
+    window.location.href = data.sessionUrl;
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Something went wrong. Please try again.', 'fa-exclamation-circle');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fab fa-stripe"></i> Checkout with Card';
+  }
+}
+
+/* ── BOOT ── */
+loadSummary();
+renderForm();
+</script>
+</body>
+</html>

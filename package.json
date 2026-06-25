@@ -1,9 +1,14 @@
 {
   "name": "zahanshop",
   "version": "1.0.0",
-  "description": "Zahan Store® — Unified Shop Storefront (Phase 2)",
+  "description": "Zahan Store® — Unified Shop Storefront",
   "scripts": {
     "build": "node build.js"
+  },
+  "dependencies": {
+    "razorpay":              "^2.9.2",
+    "stripe":                "^14.21.0",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "engines": {
     "node": ">=18"

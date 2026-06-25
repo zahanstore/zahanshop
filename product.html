@@ -13,11 +13,10 @@
 </head>
 <body>
 
-<!-- ── HEADER ── -->
 <header class="shop-header">
   <div class="container">
     <div class="header-inner">
-      <a href="https://www.zahan.one" class="header-logo" aria-label="Zahan Store home">
+      <a href="https://www.zahan.one" class="header-logo">
         <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®">
       </a>
       <button class="market-badge" id="marketBadge" aria-label="Current market">
@@ -25,7 +24,7 @@
         <span id="marketLabel">India</span>
       </button>
       <nav class="header-nav">
-        <a href="index.html" id="backToShopLink" class="btn-icon" title="Back to shop" aria-label="Back to shop">
+        <a href="index.html" id="backToShopLink" class="btn-icon" title="Back to shop">
           <i class="fas fa-arrow-left"></i>
         </a>
         <button class="btn-icon" id="cartBtn" title="Cart" style="position:relative;">
@@ -40,20 +39,16 @@
   </div>
 </header>
 
-<!-- ── PRODUCT DETAIL ── -->
 <main class="product-detail">
   <div class="container">
     <a href="index.html" class="back-link" id="backLink">
       <i class="fas fa-arrow-left"></i>
       <span>Back to shop</span>
     </a>
-    <div id="productContent">
-      <!-- Skeleton shown on load, replaced by product data -->
-    </div>
+    <div id="productContent"></div>
   </div>
 </main>
 
-<!-- ── FOOTER ── -->
 <footer class="shop-footer">
   <div class="container">
     <div class="footer-top">
@@ -77,52 +72,46 @@
 <div class="toast-container" aria-live="polite"></div>
 <script src="app.js"></script>
 <script>
-/* ── STATE ── */
 let state = {
-  market:  'in',
-  product: null,
+  market:          'in',
+  product:         null,
   selectedVariant: null,
   selectedSize:    null,
   selectedColor:   null,
-  mainImageUrl:    null,
 };
 
-/* ── PARSE URL ── */
+/* Parse URL */
 (function init() {
-  const p = new URLSearchParams(window.location.search);
+  const p      = new URLSearchParams(window.location.search);
   state.market = p.get('market') || 'in';
-  const id = p.get('id');
+  const id     = p.get('id');
 
-  // Update back link to preserve market filter
   const backLink = document.getElementById('backLink');
   const backShop = document.getElementById('backToShopLink');
   if (backLink) backLink.href = `index.html?market=${state.market}`;
   if (backShop) backShop.href = `index.html?market=${state.market}`;
 
   renderMarketBadge();
-
   if (!id) { renderError('No product specified.'); return; }
   renderSkeleton();
   loadProduct(id);
 })();
 
-/* ── MARKET BADGE (read-only on detail page) ── */
 function renderMarketBadge() {
   const badge = document.getElementById('marketBadge');
   const icon  = document.getElementById('marketIcon');
   const label = document.getElementById('marketLabel');
   if (state.market === 'in') {
-    badge.className = 'market-badge market-badge--india';
-    icon.className  = 'fas fa-store';
+    badge.className   = 'market-badge market-badge--india';
+    icon.className    = 'fas fa-store';
     label.textContent = 'India';
   } else {
-    badge.className = 'market-badge market-badge--global';
-    icon.className  = 'fas fa-globe';
+    badge.className   = 'market-badge market-badge--global';
+    icon.className    = 'fas fa-globe';
     label.textContent = 'International';
   }
 }
 
-/* ── SKELETON ── */
 function renderSkeleton() {
   document.getElementById('productContent').innerHTML = `
     <div class="detail-grid">
@@ -135,16 +124,13 @@ function renderSkeleton() {
       <div style="padding-top:0.5rem;">
         <div class="skeleton-line" style="width:35%;margin-bottom:1rem;"></div>
         <div class="skeleton-line skeleton-line--title" style="height:2rem;margin-bottom:0.75rem;"></div>
-        <div class="skeleton-line" style="width:60%;height:2rem;margin-bottom:2rem;"></div>
+        <div class="skeleton-line" style="width:40%;height:2rem;margin-bottom:2rem;"></div>
         <div class="skeleton-line" style="width:90%;margin-bottom:0.5rem;"></div>
-        <div class="skeleton-line" style="width:80%;margin-bottom:0.5rem;"></div>
-        <div class="skeleton-line" style="width:70%;"></div>
+        <div class="skeleton-line" style="width:75%;"></div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-/* ── LOAD PRODUCT ── */
 async function loadProduct(id) {
   try {
     state.product = await fetchProduct(id);
@@ -152,22 +138,19 @@ async function loadProduct(id) {
     document.title = `${state.product.name} — Zahan Store®`;
     renderProduct();
   } catch (err) {
-    console.error('Product load error:', err);
+    console.error(err);
     renderError('Could not load product details.');
   }
 }
 
-/* ── RENDER PRODUCT ── */
 function renderProduct() {
-  const p = state.product;
+  const p        = state.product;
   const images   = getSortedImages(p.product_images);
   const variants = p.product_variants || [];
   const sizes    = [...new Set(variants.map(v => v.size).filter(Boolean))];
   const colors   = [...new Set(variants.map(v => v.color).filter(Boolean))];
   const brand    = p.brand.toLowerCase();
 
-  // Set first image + default variant
-  state.mainImageUrl   = images.length ? images[0].url : null;
   state.selectedVariant = variants.find(v => (v.stock_qty || 0) > 0) || variants[0] || null;
   if (state.selectedVariant) {
     state.selectedSize  = state.selectedVariant.size;
@@ -179,128 +162,97 @@ function renderProduct() {
     : null;
 
   document.getElementById('productContent').innerHTML = `
-    <!-- Gallery -->
     <div class="detail-grid">
       <div class="detail-gallery">
         <div class="gallery-main" id="galleryMain">
-          ${state.mainImageUrl
-            ? `<img id="mainImg" src="${state.mainImageUrl}" alt="${p.name}">`
-            : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:3rem;"><i class="fas fa-tshirt"></i></div>`
-          }
+          ${images.length
+            ? `<img id="mainImg" src="${images[0].url}" alt="${p.name}">`
+            : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:3rem;"><i class="fas fa-tshirt"></i></div>`}
         </div>
         ${images.length > 1 ? `
-          <div class="gallery-thumbs" role="list" aria-label="Product images">
+          <div class="gallery-thumbs">
             ${images.map((img, i) => `
-              <button class="gallery-thumb ${i === 0 ? 'active' : ''}"
-                      data-src="${img.url}"
-                      data-idx="${i}"
-                      role="listitem"
-                      aria-label="View image ${i + 1}"
-                      title="${img.alt_text || 'Product image ' + (i + 1)}">
-                <img src="${img.url}" alt="${img.alt_text || ''}">
-              </button>
-            `).join('')}
-          </div>
-        ` : ''}
+              <button class="gallery-thumb ${i===0?'active':''}" data-src="${img.url}" data-idx="${i}" aria-label="Image ${i+1}">
+                <img src="${img.url}" alt="${img.alt_text||''}">
+              </button>`).join('')}
+          </div>` : ''}
       </div>
 
-      <!-- Info Panel -->
       <div class="detail-info">
         <p class="detail-eyebrow ${brand}">${p.brand}™</p>
         <h1 class="detail-title">${p.name}</h1>
-
         <p class="detail-price" id="priceDisplay">
-          ${currentPrice || '<span style="font-size:1rem;color:var(--text-muted);">Price coming soon</span>'}
-          ${currentPrice ? `<span class="currency-label">${getCurrencyLabel(state.market)}</span>` : ''}
+          ${currentPrice
+            ? `${currentPrice} <span class="currency-label">${getCurrencyLabel(state.market)}</span>`
+            : `<span style="font-size:1rem;color:var(--text-muted);">Price coming soon</span>`}
         </p>
 
         ${p.description ? `<p class="detail-description">${p.description}</p>` : ''}
 
-        <!-- Size Selector -->
         ${sizes.length ? `
           <div class="variant-group">
-            <p class="variant-label">Size <span id="selectedSizeLabel">${state.selectedSize || ''}</span></p>
+            <p class="variant-label">Size <span id="selectedSizeLabel">${state.selectedSize||''}</span></p>
             <div class="variant-options" id="sizeOptions">
-              ${sizes.map(size => {
-                const hasStock = variants.some(v => v.size === size && (v.stock_qty || 0) > 0);
-                const isActive = size === state.selectedSize;
-                return `<button
-                  class="variant-btn ${isActive ? 'active' : ''} ${!hasStock ? 'out-of-stock' : ''}"
-                  data-size="${size}"
-                  ${!hasStock ? 'disabled aria-disabled="true"' : ''}
-                  aria-pressed="${isActive}"
-                  aria-label="Size ${size}${!hasStock ? ', sold out' : ''}"
-                >${size}</button>`;
+              ${sizes.map(s => {
+                const hasStock = variants.some(v => v.size===s && (v.stock_qty||0)>0);
+                const active   = s === state.selectedSize;
+                return `<button class="variant-btn ${active?'active':''} ${!hasStock?'out-of-stock':''}"
+                  data-size="${s}" ${!hasStock?'disabled':''}
+                  aria-pressed="${active}">${s}</button>`;
               }).join('')}
             </div>
-          </div>
-        ` : ''}
+          </div>` : ''}
 
-        <!-- Colour Selector -->
         ${colors.length ? `
           <div class="variant-group">
-            <p class="variant-label">Colour <span id="selectedColourLabel">${state.selectedColor || ''}</span></p>
+            <p class="variant-label">Colour <span id="selectedColourLabel">${state.selectedColor||''}</span></p>
             <div class="variant-options" id="colourOptions">
-              ${colors.map(color => {
-                const hasStock = variants.some(v => v.color === color && (v.stock_qty || 0) > 0);
-                const isActive = color === state.selectedColor;
-                return `<button
-                  class="variant-btn ${isActive ? 'active' : ''} ${!hasStock ? 'out-of-stock' : ''}"
-                  data-color="${color}"
-                  ${!hasStock ? 'disabled aria-disabled="true"' : ''}
-                  aria-pressed="${isActive}"
-                  aria-label="Colour ${color}${!hasStock ? ', sold out' : ''}"
-                >${color}</button>`;
+              ${colors.map(c => {
+                const hasStock = variants.some(v => v.color===c && (v.stock_qty||0)>0);
+                const active   = c === state.selectedColor;
+                return `<button class="variant-btn ${active?'active':''} ${!hasStock?'out-of-stock':''}"
+                  data-color="${c}" ${!hasStock?'disabled':''}
+                  aria-pressed="${active}">${c}</button>`;
               }).join('')}
             </div>
-          </div>
-        ` : ''}
+          </div>` : ''}
 
-        <!-- Stock Indicator -->
-        <div id="stockIndicator" class="stock-indicator">
-          ${renderStockBadge()}
-        </div>
+        <div id="stockIndicator" class="stock-indicator">${renderStockBadge()}</div>
 
-        <!-- CTA -->
+        <!-- CTA — Phase 3 live -->
         <div class="cta-group">
-          <button class="btn btn-primary btn-lg btn-full" id="addToCartBtn" onclick="handleAddToCart()">
-            <i class="fas fa-shopping-bag"></i>
-            Add to Cart
+          <a href="#" id="buyNowBtn" class="btn btn-primary btn-lg btn-full">
+            <i class="fas fa-bolt"></i> Buy Now
+          </a>
+          <button class="btn btn-secondary btn-full" id="addToCartBtn" onclick="handleAddToCart()">
+            <i class="fas fa-shopping-bag"></i> Add to Cart
           </button>
-          <div class="phase3-notice">
-            <i class="fas fa-info-circle"></i>
-            <span>Checkout with Razorpay (India) and Stripe (International) launches in <strong>Phase 3</strong>. Cart is live — payment wiring coming next week.</span>
-          </div>
         </div>
 
-        <!-- Meta -->
         ${renderMeta(p)}
       </div>
-    </div>
-  `;
+    </div>`;
 
   bindGallery();
   bindVariants();
-  updateAddToCartState();
+  updateCTA();
 }
 
-/* ── STOCK BADGE ── */
 function renderStockBadge() {
   if (!state.selectedVariant) return '';
   const qty = state.selectedVariant.stock_qty || 0;
-  if (qty === 0)  return `<span class="no-stock"><span class="stock-dot"></span>Out of stock</span>`;
-  if (qty <= 3)   return `<span class="low-stock"><span class="stock-dot"></span>Only ${qty} left</span>`;
-  if (qty <= 10)  return `<span class="low-stock"><span class="stock-dot"></span>Low stock</span>`;
+  if (qty === 0) return `<span class="no-stock"><span class="stock-dot"></span>Out of stock</span>`;
+  if (qty <= 3)  return `<span class="low-stock"><span class="stock-dot"></span>Only ${qty} left</span>`;
+  if (qty <= 10) return `<span class="low-stock"><span class="stock-dot"></span>Low stock</span>`;
   return `<span class="in-stock"><span class="stock-dot"></span>In stock</span>`;
 }
 
-/* ── PRODUCT META ── */
 function renderMeta(p) {
   const rows = [];
-  if (p.category) rows.push({ key: 'Category', val: p.category });
-  if (p.brand)    rows.push({ key: 'Collection', val: `${p.brand}™` });
+  if (p.category) rows.push({ key: 'Category',   val: p.category });
+  if (p.brand)    rows.push({ key: 'Collection',  val: `${p.brand}™` });
   if (state.selectedVariant?.material) rows.push({ key: 'Material', val: state.selectedVariant.material });
-  if (state.selectedVariant?.sku)      rows.push({ key: 'SKU', val: state.selectedVariant.sku });
+  if (state.selectedVariant?.sku)      rows.push({ key: 'SKU',      val: state.selectedVariant.sku });
   if (p.tags?.length) rows.push({ key: 'Tags', val: null, tags: p.tags });
   if (!rows.length) return '';
   return `
@@ -309,109 +261,85 @@ function renderMeta(p) {
         <div class="meta-row">
           <span class="meta-key">${r.key}</span>
           ${r.tags
-            ? `<span class="meta-val"><span class="tags-list">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</span></span>`
-            : `<span class="meta-val">${r.val}</span>`
-          }
-        </div>
-      `).join('')}
-    </div>
-  `;
+            ? `<span class="meta-val"><span class="tags-list">${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</span></span>`
+            : `<span class="meta-val">${r.val}</span>`}
+        </div>`).join('')}
+    </div>`;
 }
 
-/* ── GALLERY INTERACTION ── */
 function bindGallery() {
   document.querySelectorAll('.gallery-thumb').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.gallery-thumb').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const mainImg = document.getElementById('mainImg');
-      if (mainImg) {
-        mainImg.style.opacity = '0';
-        setTimeout(() => {
-          mainImg.src = btn.dataset.src;
-          mainImg.style.opacity = '1';
-          mainImg.style.transition = 'opacity 0.25s';
-        }, 120);
-      }
+      const img = document.getElementById('mainImg');
+      if (img) { img.style.opacity='0'; setTimeout(()=>{ img.src=btn.dataset.src; img.style.opacity='1'; img.style.transition='opacity 0.25s'; }, 120); }
     });
   });
 }
 
-/* ── VARIANT INTERACTION ── */
 function bindVariants() {
   const variants = state.product.product_variants || [];
-
-  // Size buttons
   document.querySelectorAll('#sizeOptions .variant-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#sizeOptions .variant-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
+      document.querySelectorAll('#sizeOptions .variant-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
       state.selectedSize = btn.dataset.size;
-      const label = document.getElementById('selectedSizeLabel');
-      if (label) label.textContent = state.selectedSize;
+      const lbl = document.getElementById('selectedSizeLabel'); if(lbl) lbl.textContent = state.selectedSize;
       resolveVariant();
     });
   });
-
-  // Colour buttons
   document.querySelectorAll('#colourOptions .variant-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#colourOptions .variant-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
+      document.querySelectorAll('#colourOptions .variant-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
       state.selectedColor = btn.dataset.color;
-      const label = document.getElementById('selectedColourLabel');
-      if (label) label.textContent = state.selectedColor;
+      const lbl = document.getElementById('selectedColourLabel'); if(lbl) lbl.textContent = state.selectedColor;
       resolveVariant();
     });
   });
 }
 
-/* Match size + color selection to a specific variant */
 function resolveVariant() {
   const variants = state.product.product_variants || [];
-  const match = variants.find(v =>
+  state.selectedVariant = variants.find(v =>
     (!state.selectedSize  || v.size  === state.selectedSize) &&
     (!state.selectedColor || v.color === state.selectedColor)
-  ) || variants.find(v =>
-    !state.selectedSize  || v.size  === state.selectedSize
-  ) || null;
+  ) || variants.find(v => !state.selectedSize || v.size === state.selectedSize) || null;
 
-  state.selectedVariant = match;
-
-  // Update price
   const priceEl = document.getElementById('priceDisplay');
   if (priceEl) {
-    const price = match ? formatPrice(getVariantPrice(match, state.market), state.market) : null;
-    priceEl.innerHTML = price
-      ? `${price} <span class="currency-label">${getCurrencyLabel(state.market)}</span>`
+    const p = state.selectedVariant ? formatPrice(getVariantPrice(state.selectedVariant, state.market), state.market) : null;
+    priceEl.innerHTML = p
+      ? `${p} <span class="currency-label">${getCurrencyLabel(state.market)}</span>`
       : `<span style="font-size:1rem;color:var(--text-muted);">Price coming soon</span>`;
   }
-
-  // Update stock
-  const stockEl = document.getElementById('stockIndicator');
-  if (stockEl) stockEl.innerHTML = renderStockBadge();
-
-  updateAddToCartState();
+  const si = document.getElementById('stockIndicator'); if(si) si.innerHTML = renderStockBadge();
+  updateCTA();
 }
 
-/* ── ADD TO CART ── */
-function updateAddToCartState() {
-  const btn = document.getElementById('addToCartBtn');
-  if (!btn) return;
+function updateCTA() {
+  const buyBtn  = document.getElementById('buyNowBtn');
+  const cartBtn = document.getElementById('addToCartBtn');
+  if (!buyBtn) return;
+
   const outOfStock = state.selectedVariant && (state.selectedVariant.stock_qty || 0) === 0;
   const noVariant  = !state.selectedVariant;
-  btn.disabled = outOfStock || noVariant;
-  btn.innerHTML = outOfStock
-    ? '<i class="fas fa-times-circle"></i> Out of Stock'
-    : '<i class="fas fa-shopping-bag"></i> Add to Cart';
+
+  if (outOfStock || noVariant) {
+    buyBtn.style.pointerEvents = 'none';
+    buyBtn.style.opacity = '0.45';
+    buyBtn.innerHTML = outOfStock
+      ? '<i class="fas fa-times-circle"></i> Out of Stock'
+      : '<i class="fas fa-bolt"></i> Buy Now';
+  } else {
+    buyBtn.style.pointerEvents = '';
+    buyBtn.style.opacity = '';
+    buyBtn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
+    buyBtn.href = `checkout.html?variantId=${state.selectedVariant.id}&qty=1&market=${state.market}&productId=${state.product.id}`;
+  }
+
+  if (cartBtn) cartBtn.disabled = outOfStock || noVariant;
 }
 
 function handleAddToCart() {
@@ -419,7 +347,6 @@ function handleAddToCart() {
   Cart.add(state.product, state.selectedVariant, state.market);
 }
 
-/* ── ERROR STATE ── */
 function renderError(msg) {
   document.getElementById('productContent').innerHTML = `
     <div class="state-box" style="padding:5rem 0;">
@@ -429,13 +356,12 @@ function renderError(msg) {
       <a href="index.html?market=${state.market}" class="btn btn-outline">
         <i class="fas fa-arrow-left"></i> Back to Shop
       </a>
-    </div>
-  `;
+    </div>`;
 }
 
-/* ── CART BUTTON ── */
 document.getElementById('cartBtn').addEventListener('click', () => {
-  showToast('Cart checkout launches in Phase 3 🚀', 'fa-info-circle');
+  const count = Cart.count();
+  showToast(count ? `${count} item${count>1?'s':''} in cart` : 'Your cart is empty', 'fa-shopping-bag');
 });
 </script>
 </body>

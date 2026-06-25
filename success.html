@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed — Zahan Store®</title>
+<link rel="icon" href="https://www.zahan.one/images/brand/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.success-wrap {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+.success-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 3rem 2.5rem;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+}
+.success-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(91,141,238,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.75rem;
+  font-size: 1.75rem;
+  color: #34d399;
+}
+.success-title {
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.625rem;
+}
+.success-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+.order-id-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.order-id-label { font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-head); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.order-id-value { font-family: monospace; font-size: 0.78rem; color: var(--accent); word-break: break-all; text-align: right; }
+.copy-btn       { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 0.72rem; color: var(--text-muted); cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+.copy-btn:hover { border-color: var(--border-hi); color: var(--text); }
+.success-steps  { text-align: left; margin-bottom: 2rem; }
+.step           { display: flex; gap: 0.875rem; margin-bottom: 1rem; align-items: flex-start; }
+.step-num       { width: 24px; height: 24px; border-radius: 50%; background: rgba(91,141,238,0.15); border: 1px solid rgba(91,141,238,0.3); display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 0.7rem; font-weight: 700; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+.step-text h4   { font-family: var(--font-head); font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.15rem; }
+.step-text p    { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+.success-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+</style>
+</head>
+<body>
+
+<header class="shop-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="https://www.zahan.one" class="header-logo">
+        <img src="https://www.zahan.one/images/brand/logo.png" alt="Zahan Store®">
+      </a>
+      <span class="market-badge market-badge--india" style="cursor:default;">
+        <i class="fas fa-check-circle" style="font-size:0.7rem;"></i>
+        <span>Order Confirmed</span>
+      </span>
+      <div class="header-nav"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="success-wrap">
+    <div class="success-card" id="successCard">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</main>
+
+<footer class="shop-footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>© 2026 ZahanStore®. All Rights Reserved.</span>
+      <span>Made with ♥ in Abu Dhabi, UAE 🌙</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="app.js"></script>
+<script>
+const params  = new URLSearchParams(window.location.search);
+const orderId = params.get('orderId') || '';
+const market  = params.get('market')  || 'global';
+
+function copyOrderId() {
+  navigator.clipboard.writeText(orderId).then(() => {
+    showToast('Order ID copied', 'fa-check');
+  });
+}
+
+document.getElementById('successCard').innerHTML = `
+  <div class="success-icon">
+    <i class="fas fa-check"></i>
+  </div>
+  <h1 class="success-title">Order Confirmed 🎉</h1>
+  <p class="success-sub">
+    Thank you for your order. You'll receive a confirmation email shortly,
+    followed by shipping updates as your order is prepared.
+  </p>
+
+  ${orderId ? `
+  <div class="order-id-box">
+    <div>
+      <p class="order-id-label">Order ID</p>
+      <p class="order-id-value">${orderId}</p>
+    </div>
+    <button class="copy-btn" onclick="copyOrderId()">
+      <i class="fas fa-copy"></i> Copy
+    </button>
+  </div>
+  ` : ''}
+
+  <div class="success-steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <h4>Order Received</h4>
+        <p>Your order has been confirmed and is being processed.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <h4>In Production</h4>
+        <p>Your item will be custom-made by our ${market === 'in' ? 'Qikink' : 'Printful'} fulfilment partner.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <h4>Shipped to You</h4>
+        <p>You'll get a tracking link by email once your order ships.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-actions">
+    <a href="index.html?market=${market}" class="btn btn-primary btn-full">
+      <i class="fas fa-shopping-bag"></i> Continue Shopping
+    </a>
+    <a href="https://www.zahan.one/index.html#contact" class="btn btn-secondary btn-full">
+      <i class="fas fa-headset"></i> Need Help?
+    </a>
+  </div>
+`;
+</script>
+</body>
+</html>
